@@ -1,4 +1,4 @@
-const QUESTION_HEADING = /^\s*(?:\*\*)?Question\s+(\d+)\b.*$/gim;
+const QUESTION_HEADING = /^\s*(?:#{1,6}\s*)?(?:\*\*)?Question\s+(\d+)\b.*$/gim;
 const OPTION_LINE = /^([A-D])\.\s+(.+)$/;
 
 function splitQuestionBlocks(markdown) {
@@ -22,6 +22,14 @@ function stripMarkdownEmphasis(text) {
   return text.replace(/\*\*/g, "").trim();
 }
 
+function stripMarkdownHeading(text) {
+  return stripMarkdownEmphasis(text).replace(/^#{1,6}\s*/, "").trim();
+}
+
+function extractQuestionNumber(text) {
+  return Number(stripMarkdownHeading(text).match(/^Question\s+(\d+)/i)?.[1]);
+}
+
 function labelMatch(line, label) {
   const normalized = stripMarkdownEmphasis(line);
   return normalized.match(new RegExp(`^${label}:\\s*(.*)$`, "i"));
@@ -35,8 +43,8 @@ function sourceMatch(line) {
 export function parseExamMarkdown(markdown) {
   return splitQuestionBlocks(markdown).map((block) => {
     const lines = cleanLines(block);
-    const heading = lines[0] ?? "";
-    const number = Number(heading.match(/^Question\s+(\d+)/i)?.[1]);
+    const heading = stripMarkdownHeading(lines[0] ?? "");
+    const number = extractQuestionNumber(heading);
     const optionLines = [];
     const promptLines = [];
 
@@ -75,7 +83,7 @@ export function parseAnswerMarkdown(markdown) {
 
   for (const block of splitQuestionBlocks(markdown)) {
     const lines = cleanLines(block);
-    const number = Number(stripMarkdownEmphasis(lines[0] ?? "").match(/^Question\s+(\d+)/i)?.[1]);
+    const number = extractQuestionNumber(lines[0] ?? "");
     const resultLine =
       lines.find((line) => /^Result:/i.test(stripMarkdownEmphasis(line))) ??
       lines.find((line) => /Correct Option:/i.test(stripMarkdownEmphasis(line))) ??

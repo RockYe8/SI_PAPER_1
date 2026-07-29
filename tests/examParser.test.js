@@ -49,7 +49,7 @@ const boldAnswerMarkdown = `**Question 1**
 **Explanation:** Under Part X of the SFO, the SFC can issue Intervention Notices directly. It cannot wind up a company directly.
 **中文解釋:** 根據《證券及期貨條例》第 X 部，證監會可直接發出干預通知，但無權直接命令公司清盤。
 **Source:** Study Manual Chapter 10, Sections 204-206 and 212.
-**Question 2**
+## Question 2
 **Correct Option:** **A**
 **Explanation:** A is correct.
 **中文解釋:** A 正確。
