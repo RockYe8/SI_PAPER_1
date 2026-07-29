@@ -1,4 +1,4 @@
-const QUESTION_HEADING = /^Question\s+(\d+)\b.*$/gim;
+const QUESTION_HEADING = /^\s*(?:\*\*)?Question\s+(\d+)\b.*$/gim;
 const OPTION_LINE = /^([A-D])\.\s+(.+)$/;
 
 function splitQuestionBlocks(markdown) {
@@ -16,6 +16,20 @@ function cleanLines(text) {
     .split(/\r?\n/)
     .map((line) => line.trimEnd())
     .filter((line) => line.trim().length > 0);
+}
+
+function stripMarkdownEmphasis(text) {
+  return text.replace(/\*\*/g, "").trim();
+}
+
+function labelMatch(line, label) {
+  const normalized = stripMarkdownEmphasis(line);
+  return normalized.match(new RegExp(`^${label}:\\s*(.*)$`, "i"));
+}
+
+function sourceMatch(line) {
+  const normalized = stripMarkdownEmphasis(line);
+  return normalized.match(/^Source:\s*(.*)$/i);
 }
 
 export function parseExamMarkdown(markdown) {
@@ -61,21 +75,27 @@ export function parseAnswerMarkdown(markdown) {
 
   for (const block of splitQuestionBlocks(markdown)) {
     const lines = cleanLines(block);
-    const number = Number(lines[0]?.match(/^Question\s+(\d+)/i)?.[1]);
-    const resultLine = lines.find((line) => /^Result:/i.test(line)) ?? "";
-    const correctOption = resultLine.match(/Correct Option:\s*([A-D])/i)?.[1]?.toUpperCase();
-    const explanationIndex = lines.findIndex((line) => /^Explanation:/i.test(line));
-    const sourceIndex = lines.findIndex((line) => /^Source:/i.test(line));
+    const number = Number(stripMarkdownEmphasis(lines[0] ?? "").match(/^Question\s+(\d+)/i)?.[1]);
+    const resultLine =
+      lines.find((line) => /^Result:/i.test(stripMarkdownEmphasis(line))) ??
+      lines.find((line) => /Correct Option:/i.test(stripMarkdownEmphasis(line))) ??
+      "";
+    const correctOption = stripMarkdownEmphasis(resultLine)
+      .match(/Correct Option:\s*([A-D])/i)?.[1]
+      ?.toUpperCase();
+    const explanationIndex = lines.findIndex((line) => Boolean(labelMatch(line, "Explanation")));
+    const sourceIndex = lines.findIndex((line) => Boolean(sourceMatch(line)));
 
-    const explanation =
-      explanationIndex >= 0
-        ? lines
-            .slice(explanationIndex + 1, sourceIndex >= 0 ? sourceIndex : undefined)
-            .join("\n")
-            .trim()
-        : "";
-    const source =
-      sourceIndex >= 0 ? lines[sourceIndex].replace(/^Source:\s*/i, "").trim() : "";
+    let explanation = "";
+    if (explanationIndex >= 0) {
+      const inlineExplanation = labelMatch(lines[explanationIndex], "Explanation")?.[1]?.trim();
+      const explanationLines = lines
+        .slice(explanationIndex + 1, sourceIndex >= 0 ? sourceIndex : undefined)
+        .map(stripMarkdownEmphasis);
+      explanation = [inlineExplanation, ...explanationLines].filter(Boolean).join("\n").trim();
+    }
+
+    const source = sourceIndex >= 0 ? sourceMatch(lines[sourceIndex])?.[1]?.trim() ?? "" : "";
 
     if (number && correctOption) {
       answers.set(number, { correctOption, explanation, source });
