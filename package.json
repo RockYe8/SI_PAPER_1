@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node tests/examParser.test.js"
+    "test": "node tests/examParser.test.js && node tests/wrongBook.test.js"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^4.3.4",

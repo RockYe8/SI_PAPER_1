@@ -1,7 +1,13 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
+import { WrongBookScreen } from "./components/WrongBookScreen.jsx";
 import { loadExamBatches } from "./data/examLoader.js";
 import { scoreSubmission } from "./lib/examParser.js";
+import {
+  readWrongBook,
+  updateWrongBookFromResult,
+  writeWrongBook,
+} from "./lib/wrongBook.js";
 import "./styles.css";
 
 const EXAM_SECONDS = 90 * 60;
@@ -14,7 +20,7 @@ function formatTime(seconds) {
   return `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
 }
 
-function ExamList({ batches, onStart }) {
+function ExamList({ batches, onStart, onOpenWrongBook }) {
   return (
     <main className="shell">
       <section className="hero">
@@ -26,6 +32,9 @@ function ExamList({ batches, onStart }) {
             then review your score and explanations for wrong answers.
           </p>
         </div>
+        <button className="wrongBookButton" onClick={onOpenWrongBook}>
+          Wrong Book / 错题本
+        </button>
       </section>
 
       <section className="paperGrid" aria-label="Available exams">
@@ -68,6 +77,7 @@ function ExamScreen({ batch, onBack }) {
   const [submittedByTimeout, setSubmittedByTimeout] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [message, setMessage] = useState("");
+  const savedSubmissionRef = useRef(false);
   const currentQuestion = batch.questions[currentIndex];
   const answeredCount = Object.keys(answers).length;
   const result = useMemo(
@@ -93,6 +103,19 @@ function ExamScreen({ batch, onBack }) {
 
     return () => window.clearInterval(timer);
   }, [isSubmitted]);
+
+  useEffect(() => {
+    if (!result || savedSubmissionRef.current) return;
+
+    const nextRecords = updateWrongBookFromResult({
+      existingRecords: readWrongBook(),
+      batchId: batch.id,
+      submittedAt: new Date().toISOString(),
+      resultItems: result.items,
+    });
+    writeWrongBook(nextRecords);
+    savedSubmissionRef.current = true;
+  }, [batch.id, result]);
 
   function selectAnswer(optionKey) {
     if (isSubmitted) return;
@@ -229,13 +252,24 @@ function ExamScreen({ batch, onBack }) {
 function App() {
   const batches = useMemo(() => loadExamBatches(), []);
   const [activeBatchId, setActiveBatchId] = useState(null);
+  const [view, setView] = useState("papers");
   const activeBatch = batches.find((batch) => batch.id === activeBatchId);
+
+  if (view === "wrongBook") {
+    return <WrongBookScreen batches={batches} onBack={() => setView("papers")} />;
+  }
 
   if (activeBatch) {
     return <ExamScreen batch={activeBatch} onBack={() => setActiveBatchId(null)} />;
   }
 
-  return <ExamList batches={batches} onStart={setActiveBatchId} />;
+  return (
+    <ExamList
+      batches={batches}
+      onStart={setActiveBatchId}
+      onOpenWrongBook={() => setView("wrongBook")}
+    />
+  );
 }
 
 createRoot(document.getElementById("root")).render(<App />);

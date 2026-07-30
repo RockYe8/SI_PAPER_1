@@ -42,6 +42,27 @@ button {
   box-shadow: 0 24px 70px rgba(32, 46, 84, 0.08);
 }
 
+.wrongBookButton,
+.dangerButton {
+  align-self: flex-start;
+  padding: 12px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.wrongBookButton {
+  color: white;
+  background: #365bba;
+  border: 1px solid #365bba;
+  box-shadow: 0 12px 30px rgba(54, 91, 186, 0.22);
+}
+
+.dangerButton {
+  color: #b42318;
+  background: #fff4f2;
+  border: 1px solid #fecdca;
+}
+
 h1 {
   margin: 0;
   font-size: clamp(42px, 7vw, 76px);
@@ -266,6 +287,91 @@ h2 {
 .resultList {
   display: grid;
   gap: 12px;
+}
+
+.emptyState,
+.wrongBookItem {
+  padding: 24px;
+  background: white;
+  border: 1px solid #dde4f0;
+  border-radius: 22px;
+  box-shadow: 0 18px 50px rgba(32, 46, 84, 0.06);
+}
+
+.wrongBookItem {
+  display: grid;
+  gap: 12px;
+}
+
+.wrongBookItem.stillWrong {
+  border-left: 6px solid #f04438;
+}
+
+.wrongBookItem.recentlyCorrect {
+  border-left: 6px solid #12b76a;
+}
+
+.wrongBookMeta {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  color: #667085;
+}
+
+.wrongBookMeta strong {
+  color: #162033;
+}
+
+.compactPrompt {
+  max-height: 260px;
+  overflow: auto;
+  padding: 14px;
+  background: #f8fafc;
+  border-radius: 14px;
+}
+
+.wrongBookOptions {
+  display: grid;
+  gap: 8px;
+}
+
+.wrongBookOption {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #dde4f0;
+  border-radius: 14px;
+  background: #fbfcff;
+}
+
+.wrongBookOption.latestChoice {
+  border-color: #f79009;
+  background: #fffbeb;
+}
+
+.wrongBookOption.correctChoice {
+  border-color: #12b76a;
+  background: #f0fdf4;
+}
+
+.wrongBookOption span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  color: #365bba;
+  font-weight: 800;
+}
+
+.wrongBookOption p {
+  margin: 0;
+}
+
+.wrongBookOption em {
+  display: block;
+  font-style: normal;
+  line-height: 1.45;
 }
 
 .resultItem {
